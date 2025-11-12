@@ -15,5 +15,10 @@ Alternatively, use the helper script:
 - `bash .init/start.sh`
   - Supports env vars: HOST (default 0.0.0.0), PORT (default 3000), LOG_LEVEL (default info), RELOAD_FLAG (set to --reload for dev mode)
 
+Preview/CI boot command:
+- Ensure the preview/runner uses:
+  - `bash note-keeper-47299-47308/notes_backend/.init/start.sh`
+  - This binds to 0.0.0.0:3000 and serves src.api.main:app
+
 Health check:
 - GET http://localhost:3000/ returns: `{"message":"Healthy"}`

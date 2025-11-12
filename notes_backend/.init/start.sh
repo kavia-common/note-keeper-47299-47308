@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# Start script for notes_backend using the correct module path.
-# Uses local venv if present; otherwise falls back to system python env with uvicorn installed.
-
 set -euo pipefail
 
-APP_MODULE="src.api.main:app"
+# Defaults
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-3000}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
 RELOAD_FLAG="${RELOAD_FLAG:-}"
 
-# Activate virtualenv if exists
-if [ -d "venv" ]; then
-  # shellcheck disable=SC1091
-  source "venv/bin/activate"
+# Move to repo root if invoked from nested directories
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
+
+# Ensure Python path includes current container root for src.* imports
+export PYTHONPATH="${PYTHONPATH:-}:$(pwd)"
+
+# Validate uvicorn is installed
+if ! command -v uvicorn >/dev/null 2>&1; then
+  echo "ERROR: uvicorn not found. Please install dependencies: pip install -r requirements.txt" >&2
+  exit 1
 fi
 
-# PUBLIC_INTERFACE
-# start_app: Entry script to run the FastAPI server
-# This will start uvicorn with the proper app import path following the repository layout.
-# Parameters (via env):
-# - HOST: host binding (default 0.0.0.0)
-# - PORT: port to listen on (default 3000)
-# - LOG_LEVEL: uvicorn log level (default info)
-# - RELOAD_FLAG: set to --reload for dev mode (default empty)
-# Returns: exits with uvicorn's status code
-uvicorn "${APP_MODULE}" --host "${HOST}" --port "${PORT}" --log-level "${LOG_LEVEL}" ${RELOAD_FLAG}
+# Start uvicorn with correct module path
+# Example:
+# HOST=0.0.0.0 PORT=3000 LOG_LEVEL=info RELOAD_FLAG=--reload bash .init/start.sh
+echo "Starting notes_backend via uvicorn: src.api.main:app at ${HOST}:${PORT} (log-level=${LOG_LEVEL}) ${RELOAD_FLAG}"
+exec uvicorn "src.api.main:app" --host "${HOST}" --port "${PORT}" --log-level "${LOG_LEVEL}" ${RELOAD_FLAG}
